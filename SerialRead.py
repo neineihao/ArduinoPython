@@ -61,10 +61,16 @@ def main(file_name):
     if not port:
         raise IOError("No Arduino found")
     elif len(port) > 1:
-        logging.warning("There are two or more port")
+        logging.warning("There are two or more port\n")
+        print(port)
+        port_select = input("Please select which port to use :")
+        if len(port_select) == 0:
+            port_select = 1
+        else:
+            port_select = len(port_select)
+        use_port = port[port_select]
     else:
-        pass
-    use_port = port[0]
+        use_port = port[0]
     if serial_connect(use_port):
         dict_data = serial_read(use_port, 50)
     df = pd.DataFrame(dict_data, columns=['X', 'Y', 'Z'])
@@ -74,5 +80,5 @@ def test():
     s = 'BM1422AGMV_WIA Register Value = 0x41'
 
 if __name__ == '__main__':
-    main('test')
+    main('5_90')
     # test()
