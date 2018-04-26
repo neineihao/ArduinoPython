@@ -2,6 +2,7 @@ import serial
 import logging
 import serial.tools.list_ports
 import pandas as pd
+from functools import reduce
 
 def serial_connect(port, baudrate=19200):
     ser = serial.Serial()
@@ -55,6 +56,26 @@ def data_process(serial_str):
     else:
         print("No data")
 
+def list_average(int_list):
+    return reduce(lambda x, y: x+y, int_list) / len(int_list)
+
+def distance_from_avg(int_list):
+    average = list_average(int_list)
+    bigger = []
+    smaller = []
+    for item in int_list:
+        if item > average:
+            bigger.append(item)
+        elif item < average:
+            smaller.append(item)
+        else:
+            logging.error("There exists errors in the average")
+    before = list_average(bigger)
+    after = list_average(smaller)
+    return (after - before) ** 2
+
+def diff_cal(d_data):
+    return reduce(lambda x, y: x + y, map(distance_from_avg, d_data.values())) ** 0.5
 
 def main(file_name):
     port = list_port()
@@ -77,8 +98,12 @@ def main(file_name):
     df.to_csv('./result/{}.csv'.format(file_name))
 
 def test():
-    s = 'BM1422AGMV_WIA Register Value = 0x41'
+    #s = 'BM1422AGMV_WIA Register Value = 0x41'
+    file_path = "./result/5_90.csv"
+    read_data = pd.read_csv(file_path, index_col=0)
+    read_dict = read_data.to_dict("list")
+    print(diff_cal(read_dict))
 
 if __name__ == '__main__':
-    main('5_90')
-    # test()
+    # main('5_90')
+    test()
