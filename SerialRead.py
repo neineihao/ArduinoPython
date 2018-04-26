@@ -82,6 +82,8 @@ def main(file_name):
     result_dict = {}
     result_dict['distance'] = []
     result_dict['var'] = []
+    result_dict['X'] = []
+    result_dict['Y'] = []
     if not port:
         raise IOError("No Arduino found")
     elif len(port) > 1:
@@ -96,11 +98,13 @@ def main(file_name):
     else:
         use_port = port[0]
     if serial_connect(use_port):
-        # Enter and calculate the distance 
+        # Enter and calculate the distance
         while True:
             key_input = input("Enter the position information of the sensor:")
             if key_input.lower() == 'save':
                 break
+            elif len(key_input) == 0:
+                continue
             x, y = int(key_input.split(',')[0]), int(key_input.split(',')[1])
             distance = (x ** 2 + y ** 2) ** 0.5
             # Read the data from serial and do some process
@@ -109,7 +113,9 @@ def main(file_name):
             # Save the data into dictionary
             result_dict['distance'].append(distance)
             result_dict['var'].append(var)
-        df = pd.DataFrame(result_dict, columns=['R', 'Var'])
+            result_dict['X'].append(x)
+            result_dict['Y'].append(y)
+        df = pd.DataFrame(result_dict, columns=['X', 'Y', 'R', 'Var'])
         df.to_csv('./result/{}.csv'.format(file_name))
     # df = pd.DataFrame(dict_data, columns=['X', 'Y', 'Z'])
     # df.to_csv('./result/{}.csv'.format(file_name))
@@ -125,6 +131,8 @@ def test():
     print("X, Y: {}, {}".format(x, y))
     distance = (x ** 2 + y ** 2) ** 0.5
     print(distance)
+    data = input("Enter the word")
+    print(data.lower())
 if __name__ == '__main__':
     # main('5_90')
     test()
