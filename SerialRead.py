@@ -79,6 +79,9 @@ def diff_cal(d_data):
 
 def main(file_name):
     port = list_port()
+    result_dict = {}
+    result_dict['distance'] = []
+    result_dict['var'] = []
     if not port:
         raise IOError("No Arduino found")
     elif len(port) > 1:
@@ -93,17 +96,35 @@ def main(file_name):
     else:
         use_port = port[0]
     if serial_connect(use_port):
-        dict_data = serial_read(use_port, 50)
-    df = pd.DataFrame(dict_data, columns=['X', 'Y', 'Z'])
-    df.to_csv('./result/{}.csv'.format(file_name))
+        # Enter and calculate the distance 
+        while True:
+            key_input = input("Enter the position information of the sensor:")
+            if key_input.lower() == 'save':
+                break
+            x, y = int(key_input.split(',')[0]), int(key_input.split(',')[1])
+            distance = (x ** 2 + y ** 2) ** 0.5
+            # Read the data from serial and do some process
+            dict_data = serial_read(use_port, 50)
+            var = diff_cal(dict_data)
+            # Save the data into dictionary
+            result_dict['distance'].append(distance)
+            result_dict['var'].append(var)
+        df = pd.DataFrame(result_dict, columns=['R', 'Var'])
+        df.to_csv('./result/{}.csv'.format(file_name))
+    # df = pd.DataFrame(dict_data, columns=['X', 'Y', 'Z'])
+    # df.to_csv('./result/{}.csv'.format(file_name))
 
 def test():
     #s = 'BM1422AGMV_WIA Register Value = 0x41'
-    file_path = "./result/5_90.csv"
-    read_data = pd.read_csv(file_path, index_col=0)
-    read_dict = read_data.to_dict("list")
-    print(diff_cal(read_dict))
-
+    # file_path = "./result/5_90.csv"
+    # read_data = pd.read_csv(file_path, index_col=0)
+    # read_dict = read_data.to_dict("list")
+    # print(diff_cal(read_dict))
+    position = input("Enter the position information of the sensor:")
+    x, y = int(position.split(',')[0]), int(position.split(',')[1])
+    print("X, Y: {}, {}".format(x, y))
+    distance = (x ** 2 + y ** 2) ** 0.5
+    print(distance)
 if __name__ == '__main__':
     # main('5_90')
     test()
