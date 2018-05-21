@@ -3,6 +3,7 @@ import logging
 import serial.tools.list_ports
 import pandas as pd
 from functools import reduce
+import numpy as np
 import time
 
 def serial_connect(port, baudrate=19200):
@@ -28,10 +29,10 @@ def serial_read(port,save_c, baudrate=19200):
 
     while True:
         if count < save_c * 3:
-            start_time = time.time()
+            # start_time = time.time()
             data = arduino.readline().decode('UTF-8')
-            end_time = time.time()
-            print("The time of measurement: {}".format(end_time - start_time))
+            # end_time = time.time()
+            # print("The time of measurement: {}".format(end_time - start_time))
             list_data = data_process(data)
             print(list_data)
             if list_data[0] in result_d.keys():
@@ -63,6 +64,13 @@ def data_process(serial_str):
 def list_average(int_list):
     return reduce(lambda x, y: x+y, int_list) / len(int_list)
 
+def amplify_cal(d_data):
+    list_data = []
+    for key, value in d_data.items():
+        list_data.append(np.asarray(value))
+    return reduce(lambda x,y: np.power(np.add(np.power(x,2), np.power(y,2)), 0.5),list_data)
+
+
 def distance_from_avg(int_list):
     average = list_average(int_list)
     bigger = []
@@ -80,10 +88,6 @@ def distance_from_avg(int_list):
 
 def diff_cal(d_data):
     return reduce(lambda x, y: x + y, map(distance_from_avg, d_data.values())) ** 0.5
-
-def read_all_data():
-    pass
-
 
 
 def connect_ardunio():
@@ -111,6 +115,7 @@ def main(file_name):
     result_dict['X'] = []
     result_dict['Y'] = []
     result_dict['Z'] = []
+
     if serial_connect(use_port):
         # Enter and calculate the distance
         while True:
@@ -125,9 +130,11 @@ def main(file_name):
             # Read the data from serial and do some process
             dict_data = serial_read(use_port, 50)
             var = diff_cal(dict_data)
-            key_input = input("Valid Value or Not ? [y/n]")
-            if key_input != 'y' or 'Y':
+            key_input = input("Error ? [y/n]")
+            if key_input == 'y':
                 continue
+            # if key_input != 'y' or 'Y':
+            #     continue
             # Save the data into dictionary
             result_dict['distance'].append(distance)
             result_dict['var'].append(var)
@@ -138,6 +145,20 @@ def main(file_name):
         df.to_csv('./result/{}.csv'.format(file_name))
     # df = pd.DataFrame(dict_data, columns=['X', 'Y', 'Z'])
     # df.to_csv('./result/{}.csv'.format(file_name))
+
+def test_average():
+    use_port = connect_ardunio()
+    while True:
+        k_i = input("Test ? [y/n]")
+        if k_i =='n':
+            break
+        dict_data = serial_read(use_port, 50)
+        a_np = amplify_cal(dict_data)
+        mean = a_np.mean()
+        std = a_np.std()
+        print("The mean value is {}".format(mean))
+        print("The std value is {}".format(std))
+
 
 def test():
     #s = 'BM1422AGMV_WIA Register Value = 0x41'
@@ -153,5 +174,5 @@ def test():
     data = input("Enter the word")
     print(data.lower())
 if __name__ == '__main__':
-    main('test')
+    main('voltage_test')
     # test()
