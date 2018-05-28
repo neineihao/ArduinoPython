@@ -34,7 +34,7 @@ def serial_read(port,save_c, baudrate=19200):
             # end_time = time.time()
             # print("The time of measurement: {}".format(end_time - start_time))
             list_data = data_process(data)
-            print(list_data)
+            # print(list_data)
             if list_data[0] in result_d.keys():
                 count = count+1
                 result_d[list_data[0]].append(float(list_data[1]))
@@ -146,18 +146,33 @@ def main(file_name):
     # df = pd.DataFrame(dict_data, columns=['X', 'Y', 'Z'])
     # df.to_csv('./result/{}.csv'.format(file_name))
 
-def test_average():
+def test_average(file_name):
+    result_d = {'Times': [], 'Means': [], 'Std': []}
+    try_time = int(input("The time you want to try : "))
+    temp_result = np.zeros(try_time)
     use_port = connect_ardunio()
     while True:
-        k_i = input("Test ? [y/n]")
-        if k_i =='n':
+        times = int(input("The times of prob: "))
+        if times == 0:
             break
-        dict_data = serial_read(use_port, 50)
-        a_np = amplify_cal(dict_data)
-        mean = a_np.mean()
-        std = a_np.std()
-        print("The mean value is {}".format(mean))
-        print("The std value is {}".format(std))
+        try:
+            for i in range(try_time):
+                dict_data = serial_read(use_port, times)
+                a_np = amplify_cal(dict_data)
+                temp_result[i] = a_np.mean()
+        except:
+            print("Something error happen, please try again")
+            continue
+
+        result_d['Times'].append(times)
+        result_d['Means'].append(temp_result.mean())
+        result_d['Std'].append(temp_result.std())
+    df = pd.DataFrame(result_d, columns=['Times', 'Means', 'Std'])
+    df.to_csv('./result/{}.csv'.format(file_name))
+            # std = a_np.std()
+            # print("The times you prob : {}".format(times))
+            # print("The mean value is {}".format(mean))
+            # print("The std value is {}".format(std))
 
 
 def test():
@@ -174,5 +189,6 @@ def test():
     data = input("Enter the word")
     print(data.lower())
 if __name__ == '__main__':
-    main('voltage_test')
+    # main('voltage_test')
     # test()
+    test_average('V0X20Y0')
