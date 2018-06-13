@@ -174,6 +174,36 @@ def test_average(file_name):
             # print("The mean value is {}".format(mean))
             # print("The std value is {}".format(std))
 
+def distance_std(filename):
+    result_d = {'Distance': [], 'Means': [], 'Std': []}
+    try_times = 10
+    use_port = connect_ardunio()
+    temp_result = np.zeros(try_times)
+    while True:
+        key_input = input("Enter your position : ")
+        if key_input == 's':
+            break
+        position = list(map(int, key_input.split(',')))
+        x, y, z = position[0], position[1], position[2]
+        distance = (x ** 2 + y ** 2 + z ** 2) ** (1/2)
+        try:
+            for i in range(try_times):
+                data = serial_read(use_port, 1)
+                sig = amplify_cal(data)
+                temp_result[i] = sig
+        except:
+            print("Something errors happen, try again !")
+            continue
+
+        result_d['Distance'].append(distance)
+        result_d['Means'].append(temp_result.mean())
+        result_d['Std'].append(temp_result.std())
+        df = pd.DataFrame(result_d, columns=['Distance', 'Means', 'Std'])
+        df.to_csv('./result/{}.csv'.format(filename))
+
+
+
+
 
 def test():
     #s = 'BM1422AGMV_WIA Register Value = 0x41'
@@ -188,7 +218,9 @@ def test():
     print(distance)
     data = input("Enter the word")
     print(data.lower())
+
 if __name__ == '__main__':
     # main('voltage_test')
     # test()
-    test_average('V0X20Y0')
+    # test_average('V0X20Y0')
+    distance_std('Distance_Std')
