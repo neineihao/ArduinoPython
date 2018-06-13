@@ -52,6 +52,7 @@ def main():
     print(distance_matrix)
     p_e = Position_estimation(position, distance_matrix)
     print(p_e.cal_answer())
+
 if __name__ == '__main__':
     # test()
     main()
