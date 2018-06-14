@@ -17,6 +17,10 @@ class Position_estimation():
         self.d = distance_matrix
         return self.cal_answer()
 
+    def renew_distance(self,distance):
+        self.d = distance
+        return self.cal_answer()
+
     def cal_right(self):
         power_p = np.power(self.p, 2)
         power_d = np.power(self.d, 2)
@@ -38,15 +42,12 @@ class Position_estimation():
 
 
 def test():
-    two_one = np.ones((1,2))
-    two_two = np.ones((2,2))
-    print(two_one.shape)
-    print(two_two.shape)
-    print(two_one)
+    position = np.array([8.0622, 6.403, 5.745])
+    print(position.shape)
 
 
 def main():
-    position = np.array([(0,0,0),(4,0,0),(0,4,0)])
+    position = np.array([(0, 0, 0), (4, 0, 0), (0, 4, 0)])
     distance_matrix = np.array([8.0622, 6.403, 5.745])
     print(position)
     print(distance_matrix)
