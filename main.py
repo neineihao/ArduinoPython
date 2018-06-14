@@ -1,48 +1,43 @@
-import serial
-import csv
-import time
+from GPIB import GPIB_Manager
 import numpy as np
-import warnings
-import serial.tools.list_ports
+from SerialRead import connect_ardunio,get_signal
+from PoistionEstimation import Position_estimation
+
+def signal2distance(signal_np):
+    coefficient = 3026.88441
+    distance_np = np.power(np.divide(signal_np, coefficient), -1/3)
+    return distance_np
 
 
-arduino_ports = serial.tools.list_ports.comports()
+def main():
+    # parameter setting
+    arduno_port = connect_ardunio()
+    sender_position = np.array(([(0,0,0),(4,0,0),(0,4,0)]))
+    sender_n = sender_position.shape[0]
+    distance = np.zeros(3)
+    amplitude = np.zeros(sender_n)
+    p_e = Position_estimation(sender_position, distance)
+    sampling_n = 1
+    voltage = 12.00 #(v)
+    current = voltage / 470000 #(i)
+    #starting
+    with GPIB_Manager() as gb:
+        while True:
+            # Get reference data
+            reference = get_signal(arduno_port, sampling_n)
+            # Get the data when sender gibe the signal
+            for i in range(sender_n):
+                gb.write_data('v', voltage, i)
+                gb.write_data('i', current, i)
+                gb.turn_on(i)
+                amplitude[i] = get_signal(arduno_port, sampling_n)
+                gb.turn_off(i)
+            amplitude = np.subtract(amplitude, reference)
+            amplitude = np.absolute(amplitude)
+            #change the signal to distance
+            distance = signal2distance(amplitude)
+            position = p_e.renew_distance(distance)
+            print("The position now : {}".format(position))
 
-for item in arduino_ports:
-    print("The item is {}".format(item))
-# arduino_ports = [
-#     p.device
-#     for p in serial.tools.list_ports.comports()
-# ]
-if not arduino_ports:
-    raise IOError("No Arduino found")
-if len(arduino_ports) > 1:
-    warnings.warn('Multiple Arduinos found - using the first')
-
-Arduino = serial.Serial(arduino_ports[0])
-Arduino.flush()
-Arduino.reset_input_buffer()
-
-start_time=time.time()
-Distance = 0.5 # This is how long the lever arm is in feet
-
-while True:
-    while (Arduino.inWaiting()==0):
-        pass
-    try:
-        data = Arduino.readline()
-        dataarray = data.decode().rstrip().split(',')
-        Arduino.reset_input_buffer()
-        Force = float(dataarray[0])
-        RPM = float (dataarray[1])
-        Torque = Force * Distance
-        HorsePower = Torque * RPM / 5252
-        Run_time = time.time()-start_time
-        print (Force , 'Grams',"," , RPM ,'RPMs',"," ,Torque,"ft-lbs",",", HorsePower, "hp", Run_time, "Time Elasped")
-    except (KeyboardInterrupt, SystemExit,IndexError,ValueError):
-        pass
-    with open('DynoData.csv', 'w') as outfile:
-        outfileWrite = csv.writer(outfile)
-        outfileWrite.writerow([Force, RPM])
-
-    outfile.close()
+if __name__ == '__main__':
+    main()
