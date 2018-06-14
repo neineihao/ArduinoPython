@@ -205,7 +205,7 @@ def get_signal(port, data_number):
     data_dict = serial_read(port, 1)
     sig_list = amplify_cal(data_dict)
     result = sig_list.mean()
-
+    return result
 
 
 
