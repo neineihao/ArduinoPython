@@ -201,6 +201,11 @@ def distance_std(filename):
         df = pd.DataFrame(result_d, columns=['Distance', 'Means', 'Std'])
         df.to_csv('./result/{}.csv'.format(filename))
 
+def get_signal(port, data_number):
+    data_dict = serial_read(port, 1)
+    sig_list = amplify_cal(data_dict)
+    result = sig_list.mean()
+
 
 
 
@@ -222,5 +227,5 @@ def test():
 if __name__ == '__main__':
     # main('voltage_test')
     # test()
-    # test_average('V0X20Y0')
-    distance_std('Distance_Std')
+    test_average('V0X20Y0')
+    # distance_std('Distance_Std')
