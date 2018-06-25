@@ -203,11 +203,15 @@ def distance_std(filename):
         df.to_csv('./result/{}.csv'.format(filename))
 
 def get_signal(port, data_number):
-    data_dict = serial_read(port, 1)
-    sig_list = amplify_cal(data_dict)
+    sig_list = separate_data(port, data_number)
     result = sig_list.mean()
     return result
 
+def separate_data(port, data_number):
+    data_dict = serial_read(port, data_number)
+    # print("data_dict is : {}".format(data_dict))
+    sig_list = amplify_cal(data_dict)
+    return sig_list
 
 
 
@@ -228,5 +232,7 @@ def test():
 if __name__ == '__main__':
     # main('voltage_test')
     # test()
-    test_average('V0X20Y0')
+    # test_average('V0X20Y0')
     # distance_std('Distance_Std')
+    port = connect_ardunio()
+    print(separate_data(port, 100))
