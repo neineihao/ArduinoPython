@@ -17,7 +17,7 @@ class Position_estimation():
         self.d = distance_matrix
         return self.cal_answer()
 
-    def renew_distance(self,distance):
+    def renew_distance(self, distance):
         self.d = distance
         return self.cal_answer()
 
@@ -28,7 +28,7 @@ class Position_estimation():
         t_cal = power_p[2, 0:2] - power_p[0, 0:2]
         h_sum = h_cal.sum() + power_d[0] - power_d[1]
         t_sum = t_cal.sum() + power_d[0] - power_d[2]
-        self.a_l = np.array([[h_sum,t_sum]])
+        self.a_l = np.array([[h_sum, t_sum]])
 
     def cal_answer(self):
         self.calculate_matrix()

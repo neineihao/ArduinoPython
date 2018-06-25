@@ -4,6 +4,7 @@ import serial.tools.list_ports
 import pandas as pd
 from functools import reduce
 import numpy as np
+import retrying
 import time
 
 def serial_connect(port, baudrate=19200):
@@ -19,7 +20,7 @@ def dic_init():
     d['Y'] = []
     d['Z'] = []
     return d
-
+@retrying.retry(stop_max_attempt_number=3)
 def serial_read(port,save_c, baudrate=19200):
     count = 0
     result_d = dic_init()
