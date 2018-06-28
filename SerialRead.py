@@ -1,11 +1,10 @@
+import time
 import serial
 import logging
-import serial.tools.list_ports
-import pandas as pd
-from functools import reduce
-import numpy as np
 import retrying
-import time
+import numpy as np
+from functools import reduce
+import serial.tools.list_ports
 
 def serial_connect(port, baudrate=19200):
     ser = serial.Serial()
@@ -20,31 +19,6 @@ def dic_init():
     d['Y'] = []
     d['Z'] = []
     return d
-@retrying.retry(stop_max_attempt_number=3)
-def serial_read(port,save_c, baudrate=19200):
-    count = 0
-    result_d = dic_init()
-    arduino = serial.Serial(port=port, baudrate=baudrate)
-    arduino.flush()
-    arduino.flushInput()
-
-    while True:
-        if count < save_c * 3:
-            # start_time = time.time()
-            data = arduino.readline().decode('UTF-8')
-            # end_time = time.time()
-            # print("The time of measurement: {}".format(end_time - start_time))
-            list_data = data_process(data)
-            # print(list_data)
-            if list_data[0] in result_d.keys():
-                count = count+1
-                result_d[list_data[0]].append(float(list_data[1]))
-        else:
-            break
-    # print("size of X : {}".format(len(result_d['X'])))
-    # print("size of Y : {}".format(len(result_d['Y'])))
-    # print("size of Z : {}".format(len(result_d['Z'])))
-    return result_d
 
 def list_port():
     port = []
@@ -57,7 +31,6 @@ def data_process(serial_str):
     serial_str = serial_str.strip()
     data = serial_str.split(',')
     if data:
-        # print("The key, value: {}, {}".format(data[0], data[1]))
         return data
     else:
         print("No data")
@@ -71,168 +44,69 @@ def amplify_cal(d_data):
         list_data.append(np.asarray(value))
     return reduce(lambda x,y: np.power(np.add(np.power(x,2), np.power(y,2)), 0.5),list_data)
 
-
-def distance_from_avg(int_list):
-    average = list_average(int_list)
-    bigger = []
-    smaller = []
-    for item in int_list:
-        if item > average:
-            bigger.append(item)
-        elif item < average:
-            smaller.append(item)
-        else:
-            logging.error("There exists errors in the average")
-    before = list_average(bigger)
-    after = list_average(smaller)
-    return (after - before) ** 2
-
-def diff_cal(d_data):
-    return reduce(lambda x, y: x + y, map(distance_from_avg, d_data.values())) ** 0.5
-
-
 def connect_ardunio():
     port = list_port()
     if not port:
         raise IOError("No Arduino found")
     elif len(port) > 1:
         logging.warning("There are two or more port\n")
-        print(port)
-        port_select = input("Please select which port to use :")
-        if len(port_select) == 0:
-            port_select = 1
-        else:
-            port_select = len(port_select)
-        use_port = port[port_select]
+        use_port = port[1]
     else:
         use_port = port[0]
     return use_port
 
-def main(file_name):
-    use_port = connect_ardunio()
-    result_dict = {}
-    result_dict['distance'] = []
-    result_dict['var'] = []
-    result_dict['X'] = []
-    result_dict['Y'] = []
-    result_dict['Z'] = []
-
-    if serial_connect(use_port):
-        # Enter and calculate the distance
-        while True:
-            key_input = input("Enter the position information of the sensor:")
-            if key_input.lower() == 'save':
-                break
-            elif len(key_input) == 0:
-                continue
-            item_key_input = list(map(int, key_input.split(',')))
-            x, y, z = item_key_input[0], item_key_input[1], item_key_input[2]
-            distance = (x ** 2 + y ** 2 + z ** 2) ** 0.5
-            # Read the data from serial and do some process
-            dict_data = serial_read(use_port, 50)
-            var = diff_cal(dict_data)
-            key_input = input("Error ? [y/n]")
-            if key_input == 'y':
-                continue
-            # if key_input != 'y' or 'Y':
-            #     continue
-            # Save the data into dictionary
-            result_dict['distance'].append(distance)
-            result_dict['var'].append(var)
-            result_dict['X'].append(x)
-            result_dict['Y'].append(y)
-            result_dict['Z'].append(z)
-        df = pd.DataFrame(result_dict, columns=['X', 'Y', 'Z', 'distance', 'var'])
-        df.to_csv('./result/{}.csv'.format(file_name))
-    # df = pd.DataFrame(dict_data, columns=['X', 'Y', 'Z'])
-    # df.to_csv('./result/{}.csv'.format(file_name))
-
-def test_average(file_name):
-    result_d = {'Times': [], 'Means': [], 'Std': []}
-    try_time = int(input("The time you want to try : "))
-    temp_result = np.zeros(try_time)
-    use_port = connect_ardunio()
-    while True:
-        times = int(input("The times of prob: "))
-        if times == 0:
-            break
-        try:
-            for i in range(try_time):
-                dict_data = serial_read(use_port, times)
-                a_np = amplify_cal(dict_data)
-                temp_result[i] = a_np.mean()
-        except:
-            print("Something error happen, please try again")
-            continue
-
-        result_d['Times'].append(times)
-        result_d['Means'].append(temp_result.mean())
-        result_d['Std'].append(temp_result.std())
-    df = pd.DataFrame(result_d, columns=['Times', 'Means', 'Std'])
-    df.to_csv('./result/{}.csv'.format(file_name))
-            # std = a_np.std()
-            # print("The times you prob : {}".format(times))
-            # print("The mean value is {}".format(mean))
-            # print("The std value is {}".format(std))
-
-def distance_std(filename):
-    result_d = {'Distance': [], 'Means': [], 'Std': []}
-    try_times = 10
-    use_port = connect_ardunio()
-    temp_result = np.zeros(try_times)
-    while True:
-        key_input = input("Enter your position : ")
-        if key_input == 's':
-            break
-        position = list(map(int, key_input.split(',')))
-        x, y, z = position[0], position[1], position[2]
-        distance = (x ** 2 + y ** 2 + z ** 2) ** (1/2)
-        try:
-            for i in range(try_times):
-                data = serial_read(use_port, 1)
-                sig = amplify_cal(data)
-                temp_result[i] = sig
-        except:
-            print("Something errors happen, try again !")
-            continue
-
-        result_d['Distance'].append(distance)
-        result_d['Means'].append(temp_result.mean())
-        result_d['Std'].append(temp_result.std())
-        df = pd.DataFrame(result_d, columns=['Distance', 'Means', 'Std'])
-        df.to_csv('./result/{}.csv'.format(filename))
-
-def get_signal(port, data_number):
-    sig_list = separate_data(port, data_number)
-    result = sig_list.mean()
-    return result
-
-def separate_data(port, data_number):
-    data_dict = serial_read(port, data_number)
-    # print("data_dict is : {}".format(data_dict))
+def separate_data(ser_obj, data_number):
+    data_dict = ardunio_read(ser_obj, data_number)
     sig_list = amplify_cal(data_dict)
     return sig_list
 
+def get_signal(ser_obj, data_number):
+    sig_list = separate_data(ser_obj, data_number)
+    result = sig_list.mean()
+    return result
 
+@retrying.retry(stop_max_attempt_number=3)
+def ardunio_read(ser_obj, line_count):
+    d = dic_init()
+    for i in range(line_count):
+        line = ser_obj.readline().decode('UTF-8')  # read a '\n' terminated line
+        line = line.strip()
+        if line:
+            content = line.split(',')
+            x, y, z = None, None, None
+            try:
+                x, y, z =float(content[0]), float(content[1]), float(content[2])
+            except:
+                raise ValueError("Something wrong")
+        else:
+            continue
+        d['X'].append(x)
+        d['Y'].append(y)
+        d['Z'].append(z)
+        logging.info("X, Y, Z : {}, {}, {}".format(x, y, z))
+    return d
 
 def test():
-    #s = 'BM1422AGMV_WIA Register Value = 0x41'
-    # file_path = "./result/5_90.csv"
-    # read_data = pd.read_csv(file_path, index_col=0)
-    # read_dict = read_data.to_dict("list")
-    # print(diff_cal(read_dict))
-    position = input("Enter the position information of the sensor:")
-    x, y = int(position.split(',')[0]), int(position.split(',')[1])
-    print("X, Y: {}, {}".format(x, y))
-    distance = (x ** 2 + y ** 2) ** 0.5
-    print(distance)
-    data = input("Enter the word")
-    print(data.lower())
+    port = connect_ardunio()
+    print(port)
+    with serial.Serial(port, 19200, timeout=1) as ser:
+        ardunio_read(ser, 1)
+        print(get_signal(ser, 5))
+
+def time_test():
+    port = connect_ardunio()
+    time_prob = time.time()
+    with serial.Serial(port, 19200, timeout=1) as ser:
+        ser.flush()
+        ser.flushInput()
+        ardunio_read(ser, 1)
+        ardunio_read(ser, 1)
+        print("cost time: {}".format(time.time() - time_prob))
+        time_prob = time.time()
+        ardunio_read(ser,1)
+        print("cost time: {}".format(time.time() - time_prob))
+
+
 
 if __name__ == '__main__':
-    # main('voltage_test')
-    # test()
-    # test_average('V0X20Y0')
-    # distance_std('Distance_Std')
-    port = connect_ardunio()
-    print(separate_data(port, 100))
+    test()
