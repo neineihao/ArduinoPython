@@ -8,7 +8,7 @@ import logging
 def signal2distance(signal_np):
     coefficient = 3026.88441
     distance_np = np.power(np.divide(signal_np, coefficient), -1/3)
-    print("The distance matrix return: {} ".format(distance_np))
+    logging.info("The distance matrix return: {} ".format(distance_np))
     return distance_np
 
 
