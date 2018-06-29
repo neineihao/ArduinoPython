@@ -30,7 +30,7 @@ def PDF_data(filename):
     print("means : {}, with std: {}".format(mu, sigma))
     x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
     plt.plot(x, mlab.normpdf(x, mu, sigma))
-    plt.hist(data,range=(data.min(), data.max()),density=True, rwidth=3, bins=15)
+    plt.hist(data,range=(data.min(), data.max()), density=True, rwidth=3, bins=15)
     plt.show()
 
 def PDF_get(filename):
@@ -41,6 +41,6 @@ if __name__ == '__main__':
     # get_data()
     # read_csv()
     # PDF_data(10)
-    filename = './data/{}'.format('1000btimes.csv')
+    filename = './data/{}'.format('12V.csv')
     PDF_get(filename)
     # PDF_data(filename)
