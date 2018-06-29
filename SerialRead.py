@@ -61,14 +61,19 @@ def separate_data(ser_obj, data_number):
     return sig_list
 
 def get_signal(ser_obj, data_number):
+    return_d = {}
     sig_list = separate_data(ser_obj, data_number)
-    result = sig_list.mean()
-    return result
+    return_d['mean'] = sig_list.mean()
+    return_d['std'] = sig_list.std()
+    return return_d
 
 @retrying.retry(stop_max_attempt_number=3)
 def ardunio_read(ser_obj, line_count):
     d = dic_init()
     for i in range(line_count):
+
+        ser_obj.flush()
+        ser_obj.flushInput()
         line = ser_obj.readline().decode('UTF-8')  # read a '\n' terminated line
         line = line.strip()
         if line:
@@ -103,10 +108,10 @@ def time_test():
         ardunio_read(ser, 1)
         print("cost time: {}".format(time.time() - time_prob))
         time_prob = time.time()
-        ardunio_read(ser,1)
+        ardunio_read(ser, 1)
         print("cost time: {}".format(time.time() - time_prob))
 
 
 
 if __name__ == '__main__':
-    test()
+    time_test()
