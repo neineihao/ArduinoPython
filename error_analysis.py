@@ -211,7 +211,7 @@ if __name__ == '__main__':
     test_time = 10
     np_size = 11
     point = np.array([(5, 0, 0), (-5, 0, 0), (0, -5, 0)])
-    place = np.zeros((np_size,np_size))
+    place = np.zeros((np_size, np_size))
     for i in range(test_time):
         place += plane_simulation(point, np_size, z)
     place = place / test_time

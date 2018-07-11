@@ -51,7 +51,6 @@ Sensor::writeRegister(uint8_t addr,uint8_t reg, uint8_t data){
       
 //       return(maskedValue);
 //     }
-    
 //     //Function for setting specific bits in register
 //     //this function will only change bit range from msb to lsb
 //     uint8_t setRegValue(uint8_t deviceAddress, uint8_t reg, uint8_t value, uint8_t msb = 7, uint8_t lsb = 0) {
