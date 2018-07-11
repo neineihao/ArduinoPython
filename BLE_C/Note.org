@@ -1,0 +1,21 @@
+#+TITLE:BLE development
+
+* Basic
+** unit8_t, unit16_t, unit32_t, unit64_t
+   - unit8_t : unsigned char
+   - unit16_t : unsigned short
+   - unit32_t : unsigned int
+   - unit64_t : unsigned long long
+** enum :: Enumeration
+   - 列舉常用在函式的引數傳遞，與純綷使用常數來作為操作相比，列舉可以限制傳入函式的引數範圍。
+** Get the value of coefficient
+   - GattCharacteristic::BLE_GATT_CHAR_PROPERETIES_**** (In the Properties_t)
+** UUID
+   - Universally Unique Identifier
+** typedef
+* BLE transportation
+** Class BLEDeviece
+** Class GattCharacteristic
+   - init: (uuid, valuePtr, len, maxLen, hasVariableLen)
+   
+

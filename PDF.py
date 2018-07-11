@@ -7,7 +7,7 @@ import serial
 import time
 
 def get_data(filename):
-    data_number = 100
+    data_number = 10
     port = connect_ardunio()
     with serial.Serial(port, 19200, timeout=1) as ser:
             ardunio_read(ser, 1)
@@ -41,6 +41,6 @@ if __name__ == '__main__':
     # get_data()
     # read_csv()
     # PDF_data(10)
-    filename = './data/{}'.format('1000btimes.csv')
+    filename = './data/{}'.format('100btimes.csv')
     PDF_get(filename)
     # PDF_data(filename)
