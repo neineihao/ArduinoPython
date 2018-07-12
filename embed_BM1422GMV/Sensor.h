@@ -9,8 +9,11 @@ class Sensor{
   Sensor(PinName sda, PinName scl);
   
   uint8_t getRegValue(uint8_t addr, uint8_t reg, uint8_t msb, uint8_t lsb);
+  
   uint8_t setRegValue(uint8_t addr, uint8_t reg, uint8_t value, uint8_t msb, uint8_t lsb);
+  
   uint8_t readRegister(uint8_t addr, uint8_t reg);
+  
   void writeRegister(uint8_t addr, uint8_t reg, uint8_t data);
   ~Sensor();
     

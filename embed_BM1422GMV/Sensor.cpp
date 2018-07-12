@@ -24,10 +24,10 @@ Sensor::setRegValue(uint8_t addr, uint8_t reg, uint8_t value, uint8_t msb = 7, u
     return 0xFF;
   }
       
-  uint8_t currentValue = readRegister(deviceAddress, reg);
+  uint8_t currentValue = readRegister(addr, reg);
   uint8_t newValue = currentValue & ((0b11111111 << (msb + 1)) | (0b11111111 >> (8 - lsb)));
       
-  writeRegister(deviceAddress, reg, newValue | value);
+  writeRegister(addr, reg, newValue | value);
 }
 
 Sensor::readRegister(uint8_t addr, uint8_t reg){
