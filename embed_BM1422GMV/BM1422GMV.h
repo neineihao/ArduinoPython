@@ -86,9 +86,10 @@ class BM1422GMV : public Sensor{
   float magZ = 0;
 
   BM1422GMV(PinName sda, PinName scl, uint8_t address = BM1422GMV_DEVICE_ADDRESS_L);
-  I2C mi2c(sda, scl)
+  /* I2C mi2c(sda, scl) */
   
-  uint8_t init(void func(void), uint8_t mode = BM1422GMV_MODE_SINGLE, uint8_t rate = BM1422GMV_OUTPUT_RATE_20_HZ, uint8_t output = BM1422GMV_OUTPUT_14_BIT, uint8_t avg = BM1422GMV_AVERAGE_4);
+  /* uint8_t init(void func(void), uint8_t mode = BM1422GMV_MODE_SINGLE, uint8_t rate = BM1422GMV_OUTPUT_RATE_20_HZ, uint8_t output = BM1422GMV_OUTPUT_14_BIT, uint8_t avg = BM1422GMV_AVERAGE_4); */
+  uint8_t init(uint8_t mode = BM1422GMV_MODE_SINGLE, uint8_t rate = BM1422GMV_OUTPUT_RATE_20_HZ, uint8_t output = BM1422GMV_OUTPUT_14_BIT, uint8_t avg = BM1422GMV_AVERAGE_4);
   /* Why the func(void) */
   
   uint8_t measure(void);
@@ -96,9 +97,8 @@ class BM1422GMV : public Sensor{
   volatile void setFlagDry(void);
   
  private:
-  I2C m_i2c;
-  uint8_t _address, _intNum;
+  uint8_t _address;
   uint8_t _outputSens = 24;
-  volatile bool _flagDrdy = false;
+  /* volatile bool _flagDrdy = false; */
 }
 #endif

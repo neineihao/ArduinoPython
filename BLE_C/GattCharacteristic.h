@@ -96,7 +96,7 @@ public:
         UUID_CSC_FEATURE_CHAR                             = 0x2A5C,
         UUID_CSC_MEASUREMENT_CHAR                         = 0x2A5B,
         UUID_RSC_FEATURE_CHAR                             = 0x2A54,
-        UUID_RSC_MEASUREMENT_CHAR                         = 0x2A53
+        UUID_RSC_MEASUREMENT_CHAR                         = 0x2A53,
     };
 
     /**
