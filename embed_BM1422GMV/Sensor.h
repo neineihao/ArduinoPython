@@ -15,6 +15,8 @@ class Sensor{
   char readRegister(uint8_t addr, uint8_t reg);
   
   void writeRegister(uint8_t addr, uint8_t reg, uint8_t data);
+  
+  char read(uint8_t addr, uint8_t reg, uint8_t size, char *data);
   ~Sensor();
     
  private:

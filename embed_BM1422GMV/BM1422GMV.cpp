@@ -67,12 +67,15 @@ void BM1422GMV::get_val(char *val)
 //TODO: implement single-axis measurement
 uint8_t BM1422GMV::measure(void){
     char cmd[6];
+    /*
     cmd[0] = readRegister(0x1C, 0x10);
     cmd[1] = readRegister(0x1C, 0x11);
     cmd[2] = readRegister(0x1C, 0x12);
     cmd[3] = readRegister(0x1C, 0x13);
     cmd[4] = readRegister(0x1C, 0x14);
     cmd[5] = readRegister(0x1C, 0x15);
+    */
+    read(0x1C, 0x10, 6, cmd);
     get_val(cmd);
 //  magX = (float)(((signed short)getRegValue(_address, 0x10, 7, 0) << 8) | (getRegValue(_address, 0x11, 7, 0))) / _outputSens;
 //  magX = (float)(((signed short)readRegister(_address, 0x10) << 8) | (readRegister(_address, 0x11))) / _outputSens;

@@ -29,6 +29,7 @@ uint8_t Sensor::setRegValue(uint8_t addr, uint8_t reg, uint8_t value, uint8_t ms
   uint8_t newValue = currentValue & ((0b11111111 << (msb + 1)) | (0b11111111 >> (8 - lsb)));
       
   writeRegister(addr, reg, newValue | value);
+  return(1);
 }
 
 char Sensor::readRegister(uint8_t addr, uint8_t reg){
@@ -40,6 +41,15 @@ char Sensor::readRegister(uint8_t addr, uint8_t reg){
   m_i2c.read(addr | 1, inByte, 1);
   return(inByte[0]);
 }
+
+char Sensor::read(uint8_t addr, uint8_t reg, uint8_t size, char *data){
+  char c_reg[1];
+  c_reg[0] = (char)reg;
+  m_i2c.write(addr, c_reg, 1);
+  m_i2c.read(addr | 1, data, size);
+  return(1);
+}
+
 
 void Sensor::writeRegister(uint8_t addr,uint8_t reg, uint8_t data){
   char cmd[2];
