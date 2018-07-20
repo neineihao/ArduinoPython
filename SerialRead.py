@@ -114,4 +114,19 @@ def time_test():
 
 
 if __name__ == '__main__':
-    time_test()
+    list_port()
+    port = connect_ardunio()
+    print(port)
+    with serial.Serial(port, 9600, timeout=1) as ser:
+        ser.flush()
+        ser.flushInput()
+        while(True):
+            line = ser.readline().decode('UTF-8')  # read a '\n' terminated line
+            if line:
+                line = line.strip()
+                print(line)
+
+            else:
+                print("No data")
+        # line = line.strip()
+        # print(line)

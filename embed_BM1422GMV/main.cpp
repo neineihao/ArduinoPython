@@ -1,153 +1,79 @@
 #include "mbed.h"
-#include "TMP102.h"
-#include "BLE.h"
 #include "BM1422GMV.h"
-
-#define NEED_CONSOLE_OUTPUT 0 /* Set this if you need debug messages on the console;
-                               * it will have an impact on code-size and power consumption. */
-#define UUID_MAGNETIC_FLUX_DENSITY 0x2AA1
-#define UUID_ENV_SENSING_SERVICE   0x181A
-
-
-
-#if NEED_CONSOLE_OUTPUT
-Serial  pc(USBTX, USBRX);
+Serial  pc(P0_9, P0_11);
 #define DEBUG(...) { pc.printf(__VA_ARGS__); }
-#else
-#define DEBUG(...) /* nothing */
-#endif /* #if NEED_CONSOLE_OUTPUT */
+#define ADDR 0x1C;
+DigitalOut myled(LED1);
+//DigitalInOut pin(P0_7);
+BM1422GMV magSensor(I2C_SDA0, I2C_SCL0);
+I2C m_i2c(I2C_SDA0, I2C_SCL0);
+InterruptIn DRDY(P0_7);
 
-const static char  DEVICE_NAME[] = "HRM1017_Mag";
-static volatile bool  triggerSensorPolling = false;
-
-BLEDevice  ble;
-
-BM1422GMV magSensor(I2C_SDA1, I2C_SCL1);
-//TMP102      healthThemometer(I2C_SDA1, I2C_SCL1, 0x90);  /* The TMP102 connected to our board */
-
-/* LEDs for indication: */
-lDigitalOut  oneSecondLed(LED1);        /* LED1 is toggled every second. */
-DigitalOut  advertisingStateLed(LED2); /* LED2 is on when we are advertising, otherwise off. */
-
-// Trigger signal pin
-InterruptIn DRDY(D??);
-
-DigitalInOut ADDR(D??);
-
-
-
-uint8_t magTempPaylad[sizeof(float)*3] = {0,};
-
-// MORE information @ https://www.bluetooth.com/specifications/gatt/characteristics
-GattCharacteristic  magChar (UUID_MAGNETIC_FLUX_DENSITY,
-			     magTempPayload, sizeof(float)*3, sizeof(float)*3,
-			     GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_INDICATE);
-/* Battery Level Service */
-
-GattCharacteristic *geoMagChars = {&magChar, };
-GattService magService(UUID_ENV_SENSING_SERVICE, geoMagChars, sizeof(geoMagChars) / sizeof(GattCharacteristic *));
-
-uint16_t uuid16_list[] = {UUID_ENV_SENSING_SERVICE};
-
-void updateServiceValues(void);
-
-static Gap::ConnectionParams_t connectionParams;
-
-void disconnectionCallback(const Gap::DisconnectionCallbackParams_t *params)    // Mod
-{
-  advertisingStateLed = 1;
-    
-  DEBUG("Disconnected handle %u, reason %u\r\n", params->handle, params->reason);
-  DEBUG("Restarting the advertising process\r\n");
-  ble.gap().startAdvertising();
+char read(uint8_t addr, uint8_t reg){
+  char inByte[1];
+  char c_reg[1];
+  c_reg[0] = (char)reg;
+  m_i2c.write(addr, c_reg, 1);
+  m_i2c.read(addr | 1, inByte, 1);
+  return(inByte[0]);
 }
 
-void onConnectionCallback(const Gap::ConnectionCallbackParams_t *params)   //Mod
-{
-  advertisingStateLed = 0;
+void write(uint8_t addr,uint8_t reg, uint8_t data){
+  char cmd[2];
+  cmd[0] = reg;            // pointer to command register
+  cmd[1] = data;
+  m_i2c.write(addr, cmd, 2);
+    }
 
-  DEBUG("connected. Got handle %u\r\n", params->handle);
 
-  connectionParams.slaveLatency = 1;
-  if (ble.gap().updateConnectionParams(params->handle, &connectionParams) != BLE_ERROR_NONE) {
-    DEBUG("failed to update connection paramter\r\n");
-  }
-}
+void DoSomething(void){
+    myled = 1;
+    DEBUG("Start to measure: \n");
+    magSensor.measure();
+    DEBUG(" MagX: %f \n", magSensor.magX);
+    DEBUG(" MagY: %f \n", magSensor.magY);
+    DEBUG(" MagZ: %f \n", magSensor.magZ);
+    } 
 
-void periodicCallback(void)
-{
-  oneSecondLed = !oneSecondLed; /* Do blinky on LED1 while we're waiting for BLE events */
-  /* Note that the periodicCallback() executes in interrupt context, so it is safer to do
-   * heavy-weight sensor polling from the main thread. */
-  triggerSensorPolling = true;
-}
-
-/**************************************************************************/
-/*!
-  @brief  Program entry point
-*/
-/**************************************************************************/
-int main(void)
-{
-    
-  /* Setup blinky led */
-  oneSecondLed = 1;
-  Ticker ticker;
-  ticker.attach(periodicCallback, 1);
-       
-  DEBUG("Initialising the nRF51822\r\n");
-  ble.init();
-  ADDR.write(1);
-  magSensor.init();
-  DEBUG("Init done\r\n");
-  ble.gap().onDisconnection(disconnectionCallback);
-  ble.gap().onConnection(onConnectionCallback);
-
-  ble.gap().getPreferredConnectionParams(&connectionParams);
-
-  /* setup advertising */
-  ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
-  ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS, (uint8_t*)uuid16_list, sizeof(uuid16_list));
- // TODO:Check for COMPLETE_LIST_128BIT_SERVICE_IDS
- // TODO: Check for the GENERIC_THERMOMETER
-  // ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::GENERIC_THERMOMETER);
+void testSingleMode(char *cmd){
+    //char cmd[2];
+    write(0x1C, 0x1B, 0xC2);
+    cmd [0] = read(0x1C, 0x1B);
+    DEBUG(" CNTL1 : %x \n", cmd[0]);
+    write(0x1C, 0x5C, 0x00);
+    write(0x1C, 0x5D, 0x00);
+    cmd[0] = read(0x1C, 0x5C);
+    DEBUG(" CNTL4(1) : %x\n", cmd[0]);
+    cmd[0] = read(0x1C, 0x5D);
+    DEBUG(" CNTL4(2) : %x\n", cmd[0]);
+    write(0x1C, 0x1C, 0x0C);
+    cmd [0] = read(0x1C, 0x1C);
+    DEBUG(" CNT2 : %x\n", cmd[0]);
+    write(0x1C, 0x1D, 0x40);
+    cmd [0] = read(0x1C, 0x1D);
+    }
+void get_val(char *val)
+{ 
   
-  ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LOCAL_NAME, (uint8_t *)DEVICE_NAME, sizeof(DEVICE_NAME));
-  ble.gap().setAdvertisingType(GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED);
-  ble.gap().setAdvertisingInterval(160); /* 100ms; in multiples of 0.625ms. */
-  ble.gap().startAdvertising();
-  advertisingStateLed = 1;
-  // DEBUG("Start Advertising\r\n");
-
-  ble.gattServer().addService(magService);
-  // DEBUG("Add Service\r\n");
-
-  DRDY.rise(&updateServiceValues);
-  
-  while (true) {
-    ble.waitForEvent();
-  }
-
+  float data[1];
+  signed short mag[1];
+  mag[0] = ((signed short)val[1] << 8) | (val[0]);
+  data[0] = (float)mag[0] / 24;
+  DEBUG("The mag amplitude: %f \n", data[0]);
 }
 
-/**************************************************************************/
-/*!
-  @brief  Ticker callback to switch advertisingStateLed state
-*/
-/**************************************************************************/
-void updateServiceValues(void)
-{
-  /* Decrement the battery level. */
-  magSensor.measure();
-  float magData[3] = {magSensor.magX, magSensor.magY, magSensor.magZ};
-  /* Update the temperature. Note that we need to convert to an ieee11073 format float. */
-  // DEBUG("temp:%f\r\n", temperature);
-  // uint32_t temp_ieee11073 = quick_ieee11073_from_float(temperature);
-  memcpy(magTempPaylad+sizeof(float)*0, &magData[0], sizeof(magData[0]));
-  memcpy(magTempPaylad+sizeof(float)*1, &magData[1], sizeof(magData[1]));
-  memcpy(magTempPaylad+sizeof(float)*2, &magData[2], sizeof(magData[2]));
-
-  ble.gattServer().write(magChar.getValueAttribute().getHandle(), magTempPaylad, sizeof(magTempPaylad))
-
+int main() {
+    char cmd[2];
+    magSensor.init(BM1422GMV_MODE_SINGLE, BM1422GMV_OUTPUT_RATE_20_HZ, BM1422GMV_OUTPUT_14_BIT, BM1422GMV_AVERAGE_4);
+    DEBUG("The initial is finished \n");
+    //testSingleMode();
+    //DRDY.rise(&DoSomething);
+    while(1) {
+        write(0x1C, 0x1D, 0x40);
+        wait(0.2);
+        cmd[0] = read(0x1C, 0x10);
+        cmd[1] = read(0x1C, 0x11);
+        get_val(cmd);
+        DoSomething();
+    }
 }
-

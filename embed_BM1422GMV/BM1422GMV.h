@@ -38,8 +38,8 @@
 #define BM1422GMV_REG_GAIN_PARA_Z_TO_X                0xA1
 
 //BM1422GMV default values
-#define BM1422GMV_DEVICE_ADDRESS_L                    0x0E
-#define BM1422GMV_DEVICE_ADDRESS_H                    0x0F
+#define BM1422GMV_DEVICE_ADDRESS_L                    0x1C
+#define BM1422GMV_DEVICE_ADDRESS_H                    0x1E
 #define BM1422GMV_WHO_AM_I                            0x41
 #define INT_0                                         0x00
 #define INT_1                                         0x01
@@ -80,25 +80,24 @@
 #include "mbed.h"
 
 class BM1422GMV : public Sensor{
- pubic:
-  float magX = 0;
-  float magY = 0;
-  float magZ = 0;
+ public:
+  float magX ;
+  float magY ;
+  float magZ ;
+  uint8_t mode, rate, output, avg;
 
-  BM1422GMV(PinName sda, PinName scl, uint8_t address = BM1422GMV_DEVICE_ADDRESS_L);
+  BM1422GMV(PinName sda, PinName scl);
   /* I2C mi2c(sda, scl) */
   
   /* uint8_t init(void func(void), uint8_t mode = BM1422GMV_MODE_SINGLE, uint8_t rate = BM1422GMV_OUTPUT_RATE_20_HZ, uint8_t output = BM1422GMV_OUTPUT_14_BIT, uint8_t avg = BM1422GMV_AVERAGE_4); */
-  uint8_t init(uint8_t mode = BM1422GMV_MODE_SINGLE, uint8_t rate = BM1422GMV_OUTPUT_RATE_20_HZ, uint8_t output = BM1422GMV_OUTPUT_14_BIT, uint8_t avg = BM1422GMV_AVERAGE_4);
+  uint8_t init(uint8_t mode, uint8_t rate, uint8_t output,uint8_t avg);
   /* Why the func(void) */
-  
+  void get_val(char *val);
   uint8_t measure(void);
-  
-  volatile void setFlagDry(void);
   
  private:
   uint8_t _address;
-  uint8_t _outputSens = 24;
+  uint8_t _outputSens;
   /* volatile bool _flagDrdy = false; */
-}
+};
 #endif
